@@ -118,3 +118,19 @@ resource "aws_lb_listener" "clixx-app-listener" {
     target_group_arn = aws_lb_target_group.clixx-app-target-group.arn
   }
 }
+
+resource "aws_efs_file_system" "stack-clixx-EFS" {
+  lifecycle_policy {
+    transition_to_ia = "AFTER_30_DAYS"
+  }
+
+  tags = {
+    Name = "stack-clixx-EFS"
+  }
+}
+
+resource "aws_efs_mount_target" "stack-clixx-EFS-Mount" {
+  file_system_id  = aws_efs_file_system.stack-clixx-EFS.id
+  subnet_id       = aws_subnet.clixx-pub1.id
+  security_groups = [aws_security_group.clixx-app-server.id]
+}
