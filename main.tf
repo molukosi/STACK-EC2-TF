@@ -134,3 +134,31 @@ resource "aws_efs_mount_target" "stack-clixx-EFS-Mount" {
   subnet_id       = aws_subnet.clixx-pub1.id
   security_groups = [aws_security_group.clixx-app-server.id]
 }
+
+resource "aws_autoscaling_group" "auto-scaling" {
+  name                = "clixx-app-auto-scaling"
+  desired_capacity    = 1
+  max_size            = 3
+  min_size            = 1
+  vpc_zone_identifier = [aws_subnet.clixx-pub1.id, aws_subnet.clixx-pub2.id]
+  count               = var.number_of_asgs
+
+  launch_template {
+    id      = aws_launch_template.launch-template.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "stack-clixx-app-ASG-${count.index + 1}"
+    propagate_at_launch = true
+  }
+
+  target_group_arns = [aws_lb_target_group.clixx-app-target-group.arn]
+
+  tag {
+    key                 = "environment"
+    value               = "Dev"
+    propagate_at_launch = true
+  }
+}
